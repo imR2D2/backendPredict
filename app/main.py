@@ -1,24 +1,32 @@
-# app/main.py
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import numpy as np
-import joblib
 
+# Crear la aplicación FastAPI
 app = FastAPI()
 
-# Modelo de entrada
-class DatosEntrada(BaseModel):
+# Configurar CORS
+origins = [
+    "http://localhost",  # Permitir desde localhost
+    "http://localhost:3000",  # Si tu frontend está en puerto 3000
+    "https://tu-dominio-render.com",  # Si también vas a desplegar el frontend
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Puedes agregar más dominios aquí
+    allow_credentials=True,
+    allow_methods=["*"],  # Permite todos los métodos (GET, POST, etc.)
+    allow_headers=["*"],  # Permite todos los encabezados
+)
+
+# Definir el modelo de datos
+class InputData(BaseModel):
     cuartos: int
 
-# Cargar modelo
-modelo = joblib.load("app/modelo_precio_casa.pkl")
-
-@app.get("/")
-def inicio():
-    return {"mensaje": "API para predecir el precio de una casa"}
-
+# Rutas
 @app.post("/predecir")
-def predecir(data: DatosEntrada):
-    entrada = np.array([[data.cuartos]])
-    prediccion = modelo.predict(entrada)[0]
-    return {"precio_estimado": round(prediccion, 2)}
+async def predecir(data: InputData):
+    # Aquí iría tu modelo de predicción
+    precio_estimado = data.cuartos * 50  # Ejemplo de predicción
+    return {"precio_estimado": precio_estimado}
